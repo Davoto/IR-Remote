@@ -2,16 +2,19 @@
 #define IR_BLASTER_H
 
 // Values for proper PWM bursts
-#define BURST_ON         50
-#define BURST_OFF        0
+#define BURST_ON    50
+#define BURST_OFF   0
 
 // Delays in microseconds for different bits.
-#define START_POSITIVE   9000
-#define START_NEGATIVE   4500
-#define ONE_POSITIVE     560
-#define ONE_NEGATIVE     1690
-#define ZERO_POSITIVE    560
-#define ZERO_NEGATIVE    560
+#define START_POSITIVE      9000
+#define START_NEGATIVE      4500
+#define ONE_POSITIVE        560
+#define ONE_NEGATIVE        1690
+#define ZERO_POSITIVE       560
+#define ZERO_NEGATIVE       560
+#define REPEAT_FIRST_BIT    9000
+#define REPEAT_PAUSE        2250
+#define REPEAT_SECOND_BIT   560
 
 // Standard ledcSetup() settings.
 #define PWM_CHANNEL      0
@@ -20,14 +23,14 @@
 
 class IR_Blaster {
 public:
-    explicit IR_Blaster(uint8_t Pin) : Pin(Pin) {};
+    explicit IR_Blaster(const uint8_t& Pin) : Pin(Pin) {};
 
     void begin() const {
         ledcSetup(PWM_CHANNEL, NEC_KHZ, PWM_RESOLUTION);
         ledcAttachPin(Pin, PWM_CHANNEL);
     };
 
-    static void sendMessage(uint32_t Message, uint8_t Adress = 0x00, uint8_t N_Bytes = 1) {
+    void sendMessage(uint32_t Message, uint8_t Adress = 0x00, uint8_t N_Bytes = 1) {
         sendStartBit();
         sendByte(Adress);
 
@@ -53,7 +56,19 @@ public:
         }
 
         sendZeroBit();
-    };
+    }
+
+    void sendRepeatCode(){
+        ledcWrite(PWM_CHANNEL, BURST_ON);
+        ets_delay_us(REPEAT_FIRST_BIT);
+        ledcWrite(PWM_CHANNEL, BURST_OFF);
+        ets_delay_us(REPEAT_PAUSE);
+        ledcWrite(PWM_CHANNEL, BURST_ON);
+        ets_delay_us(REPEAT_SECOND_BIT);
+        ledcWrite(PWM_CHANNEL, BURST_OFF);
+    }
+private:
+    uint8_t Pin;
 
     static void sendByte(const uint8_t& Message) {
         uint8_t PositiveMsg = Message;
@@ -85,8 +100,6 @@ public:
         ets_delay_us(START_NEGATIVE);
     };
 
-private:
-    uint8_t Pin;
 
     static void sendOneBit() {
         ledcWrite(PWM_CHANNEL, BURST_ON);
