@@ -7,3 +7,4 @@
 /managed_components/
 /lib/IR_STD/
 dependencies.lock
+/lib/SSD1283A/

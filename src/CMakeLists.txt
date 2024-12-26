@@ -9,6 +9,7 @@ set(COMPONENT_PRIV_REQUIRES )
 
 set(COMPONENT_SRCS 
 "main.cpp"
+"../lib/SSD1283A/src/SSD1283A.cpp"
 )
 
 set(COMPONENT_ADD_INCLUDEDIRS
@@ -17,6 +18,9 @@ set(COMPONENT_ADD_INCLUDEDIRS
 "../lib/IR_Blaster"
 "../lib/IR_Blaster/Example"
 "../lib/CleanRTOS/src"
+"../lib/SSD1283A/src"
+"../lib/SSD1283A/examples"
+
 )
 
 register_component()
