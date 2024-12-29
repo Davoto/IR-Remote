@@ -2,9 +2,7 @@
 .idea
 .vscode
 
-/lib/CleanRTOS/
 /components/
 /managed_components/
 /lib/IR_STD/
 dependencies.lock
-/lib/SSD1283A/
