@@ -1,0 +1,6 @@
+[submodule "lib/SSD1283A"]
+	path = lib/SSD1283A
+	url = https://github.com/ZinggJM/SSD1283A.git
+[submodule "lib/CleanRTOS"]
+	path = lib/CleanRTOS
+	url = https://github.com/pikido-edutainment/CleanRTOS.git
