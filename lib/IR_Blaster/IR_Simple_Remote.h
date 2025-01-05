@@ -1,7 +1,6 @@
 #ifndef IR_SIMPLE_REMOTE_H
 #define IR_SIMPLE_REMOTE_H
 
-#include "CleanRTOS.h"
 #include "Arduino.h"
 #include "cJSON.h"
 #include "IR_Button_Handler.h"
@@ -30,6 +29,9 @@ public:
         xTaskCreate(Static_main, TASK_NAME, TASK_STACK_DEPTH, this, TASK_PRIORITY, NULL);
     }
 
+    uint16_t getCoordinate(){
+        return Coordinate;
+    }
 private:
     gpio_num_t ButtonSendPin, ButtonUpPin, ButtonDownPin;
     cJSON* JsonList;
@@ -38,7 +40,7 @@ private:
     IR_Button_Handler ButtonSend = IR_Button_Handler(ButtonSendPin);
     IR_Button_Handler ButtonUp = IR_Button_Handler(ButtonUpPin);
     IR_Button_Handler ButtonDown = IR_Button_Handler(ButtonDownPin);
-    int Coordinate = 0;
+    uint16_t Coordinate = 0;
     cJSON* CurrentItem = cJSON_GetArrayItem(JsonList, Coordinate);
 
     void main(){
