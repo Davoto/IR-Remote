@@ -1,26 +1,6 @@
 #ifndef IR_BLASTER_H
 #define IR_BLASTER_H
 
-// Values for proper PWM bursts
-#define BURST_ON    50
-#define BURST_OFF   0
-
-// Delays in microseconds for different bits.
-#define START_POSITIVE      9000
-#define START_NEGATIVE      4500
-#define ONE_POSITIVE        560
-#define ONE_NEGATIVE        1690
-#define ZERO_POSITIVE       560
-#define ZERO_NEGATIVE       560
-#define REPEAT_FIRST_BIT    9000
-#define REPEAT_PAUSE        2250
-#define REPEAT_SECOND_BIT   560
-
-// Standard ledcSetup() settings.
-#define PWM_CHANNEL      0
-#define NEC_KHZ          38000
-#define PWM_RESOLUTION   8
-
 class IR_Blaster {
 public:
     explicit IR_Blaster(const uint8_t& Pin) : Pin(Pin) {};
@@ -68,6 +48,27 @@ public:
         ledcWrite(PWM_CHANNEL, BURST_OFF);
     }
 private:
+    // Values for proper PWM bursts
+    static const uint8_t BURST_ON  = 50;
+    static const uint8_t BURST_OFF = 0;
+
+    // Delays in microseconds for different bits.
+    static const uint16_t START_POSITIVE       = 9000;
+    static const uint16_t START_NEGATIVE       = 4500;
+    static const uint16_t ONE_POSITIVE         = 560;
+    static const uint16_t ONE_NEGATIVE         = 1690;
+    static const uint16_t ZERO_POSITIVE        = 560;
+    static const uint16_t ZERO_NEGATIVE        = 560;
+    static const uint16_t REPEAT_FIRST_BIT     = 9000;
+    static const uint16_t REPEAT_PAUSE         = 2250;
+    static const uint16_t REPEAT_SECOND_BIT    = 560;
+
+    // Standard ledcSetup() settings.
+    static const uint8_t PWM_CHANNEL       = 0;
+    static const uint16_t NEC_KHZ          = 38000;
+    static const uint8_t PWM_RESOLUTION    = 8;
+
+
     uint8_t Pin;
 
     static void sendByte(const uint8_t& Message) {
