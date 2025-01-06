@@ -8,12 +8,8 @@ public:
     explicit IR_Button_Handler(const gpio_num_t& Button) : Button(Button) {}
 
     void begin(){
-        gpio_install_isr_service(0);
-        gpio_reset_pin(Button);
-        gpio_set_direction(Button, GPIO_MODE_INPUT);
-        gpio_pullup_en(Button);
-        gpio_set_intr_type(Button, GPIO_INTR_POSEDGE);
-        gpio_isr_handler_add(Button, Button_Intr_Handler, this);
+        pinMode(Button, INPUT_PULLUP);
+        xTaskCreate(Static_ButtonTask, TaskName, TaskDepth, this, TaskPriority, &Task);
     }
 
     bool GetState(){
@@ -28,16 +24,22 @@ private:
     gpio_num_t Button;
     volatile bool ButtonPressed = false;
 
-    static void Button_Intr_Handler(void* arg){
+    TaskHandle_t Task;
+    const char* TaskName = "BigRemote";
+    const uint16_t TaskDepth = 1024;
+    const uint8_t  TaskPriority = 1;
+
+    static void Static_ButtonTask(void* arg){
         IR_Button_Handler* runner = (IR_Button_Handler*)arg;
-        runner->ButtonPress();
+        runner->ButtonTask();
     }
 
-    void ButtonPress(){
-        ButtonPressed = true;
+    void ButtonTask(){
+        for(;;){
+            if(!digitalRead(Button)) ButtonPressed = true;
+            vTaskDelay(100);
+        }
     }
 };
-
-
 
 #endif //IR_BUTTON_HANDLER_H
