@@ -30,7 +30,6 @@ private:
     IR_Button_Handler ButtonSelect, ButtonUp, ButtonDown, ButtonBack;
     SSD1283A_GUI Display;
     IR_Blaster IR_Blaster_;
-    JsonDocument DatabaseJson;
 
     TaskHandle_t Task;
     const char *TaskName = "BigRemote";
@@ -38,6 +37,7 @@ private:
     const uint8_t TaskPriority = 3;
 
     uint16_t Selection = 0;
+    uint16_t FolderSelected = 0;
 
     enum colours {
         Black = 0x0000,
@@ -51,7 +51,8 @@ private:
         StartScreen,
         Options,
         DatabaseUpdater,
-        Zapper,
+        ZapperFolder,
+        ZapperBlast
     };
     state State = StartScreen;
 
@@ -117,9 +118,11 @@ private:
                     Display.Print_String(OptionUpdate, 0, 80);
 
                     for (;;) {
+                        vTaskDelay(100);
+
                         if (ButtonSelect.GetState()) {
                             ESP_LOGI(TaskName, "Pressed button for Zapper");
-                            State = Zapper;
+                            State = ZapperFolder;
                             resetAllButtons();
                             break;
                         }
@@ -135,7 +138,6 @@ private:
                             resetAllButtons();
                             break;
                         }
-                        vTaskDelay(100);
                     }
                     break;
                 case 1:
@@ -151,6 +153,8 @@ private:
                     Display.Print_String(OptionUpdate, 0, 80);
 
                     for (;;) {
+                        vTaskDelay(100);
+
                         if (ButtonSelect.GetState()) {
                             ESP_LOGI(TaskName, "Pressed button for database updater");
                             State = DatabaseUpdater;
@@ -170,7 +174,6 @@ private:
                             resetAllButtons();
                             break;
                         }
-                        vTaskDelay(100);
                     }
                     break;
                 default:
@@ -183,6 +186,8 @@ private:
     }
 
     void func_DatabaseUpdater() {
+        JsonDocument DatabaseJson;
+
         unsigned char TitleBar[24] = " Database- \n  updater  ";
         unsigned char LowerText[36] = "  Storage  \n   used    \n       %   ";
         unsigned char NewDatabase[12] = "  Updated! ";
@@ -204,7 +209,7 @@ private:
 
             setText(2, White, LightGrey);
             Display.Print_String(LowerText, 0, 80);
-            Display.Print_String(String(databasePercentage), databasePercentage < 10 ? 72 : 60, 112);
+            // Display.Print_String(String(databasePercentage), databasePercentage < 10 ? 72 : 60, 112);
 
 
             deserializeJson(DatabaseJson, Serial);
@@ -217,13 +222,77 @@ private:
                 Display.Print_String(NewDatabase, 0, 48);
             }
 
+            vTaskDelay(100);
+
             if (ButtonBack.GetState()) {
                 ESP_LOGI(TaskName, "Pressed button to go back");
                 State = Options;
                 resetAllButtons();
                 break;
             }
+        }
+    }
+
+    void func_ZapperFolder() {
+        unsigned char Title[] = "  Folders  ";
+
+        Selection = 0;
+        JsonDocument DatabaseJson;
+        File database = SPIFFS.open("/database.json", FILE_READ);
+        deserializeJson(DatabaseJson, database);
+        database.close();
+
+        uint16_t MaxSize = DatabaseJson.size();
+
+        Display.Fill_Screen(Black);
+        setText(2, White, Black);
+        Display.Print_String(Title, 0, 0);
+
+        bool Changed = true;
+        for (;;) {
+            if (Changed) {
+                Changed = false;
+                for (int i = 0; i < MaxSize; i++) {
+                    if (i == Selection) {
+                        setText(2, Red, Grey);
+                    } else setText(2, White, LightGrey);
+                    int16_t y = i * 16 + 16;
+                    Display.Print_String(DatabaseJson[i][0]["subject"].as<String>(), 0, y);
+                    Serial.println(DatabaseJson[i][0]["subject"].as<String>());
+                }
+            }
+
             vTaskDelay(100);
+
+            if (ButtonSelect.GetState()) {
+                resetAllButtons();
+                State = ZapperBlast;
+                break;
+            }
+
+            if (ButtonUp.GetState()) {
+                resetAllButtons();
+                if (Selection > 0) {
+                    Changed = true;
+                    Selection--;
+                }
+            }
+
+            if (ButtonDown.GetState()) {
+                resetAllButtons();
+                if (Selection < MaxSize-1) {
+                    Changed = true;
+                    Selection++;
+                }
+            }
+
+            if (ButtonBack.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button to go back");
+                State = Options;
+                resetAllButtons();
+                break;
+            }
+
         }
     }
 
@@ -241,8 +310,11 @@ private:
                 case DatabaseUpdater:
                     func_DatabaseUpdater();
                     break;
-                case Zapper:
-                    vTaskDelay(125);
+                case ZapperFolder:
+                    func_ZapperFolder();
+                    break;
+                case ZapperBlast:
+                    vTaskDelay(100);
                     break;
             }
         }
