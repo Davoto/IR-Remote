@@ -102,15 +102,15 @@ private:
         unsigned char OptionZapper[13] = "   Zapper   ";
         unsigned char OptionUpdate[13] = "   Update   ";
 
+        Display.Fill_Screen(Black);
+
+        setText(2, White, Black);
+        Display.Print_String(OptionChoose, 0, 0);
+
         Selection = 0;
         for (;;) {
             switch (Selection) {
                 case 0:
-                    Display.Fill_Screen(Black);
-
-                    setText(2, White, Black);
-                    Display.Print_String(OptionChoose, 0, 0);
-
                     setText(2, Red, Grey);
                     Display.Print_String(OptionZapper, 0, 40);
 
@@ -141,11 +141,6 @@ private:
                     }
                     break;
                 case 1:
-                    Display.Fill_Screen(Black);
-
-                    setText(2, White, Black);
-                    Display.Print_String(OptionChoose, 0, 0);
-
                     setText(2, White, LightGrey);
                     Display.Print_String(OptionZapper, 0, 40);
 
@@ -265,12 +260,14 @@ private:
             vTaskDelay(100);
 
             if (ButtonSelect.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button to proceed to blast");
                 resetAllButtons();
                 State = ZapperBlast;
                 break;
             }
 
             if (ButtonUp.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button up");
                 resetAllButtons();
                 if (Selection > 0) {
                     Changed = true;
@@ -279,6 +276,7 @@ private:
             }
 
             if (ButtonDown.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button down");
                 resetAllButtons();
                 if (Selection < MaxSize-1) {
                     Changed = true;
@@ -293,6 +291,79 @@ private:
                 break;
             }
 
+        }
+    }
+
+    void func_ZapperBlast(){
+        unsigned char Title[] = "    Zaps   ";
+
+        FolderSelected = Selection;
+        Selection = 1;
+        JsonDocument DatabaseJson;
+        File database = SPIFFS.open("/database.json", FILE_READ);
+        deserializeJson(DatabaseJson, database);
+        database.close();
+
+        uint16_t MaxSize = DatabaseJson[FolderSelected].size();
+
+        Display.Fill_Screen(Black);
+        setText(2, White, Black);
+        Display.Print_String(Title, 0, 0);
+
+        bool Changed = true;
+        for (;;) {
+            if (Changed) {
+                Changed = false;
+                for (int i = 1; i < MaxSize; i++) {
+                    if (i == Selection) {
+                        setText(2, Red, Grey);
+                    } else setText(2, White, LightGrey);
+                    int16_t y = i * 16;
+                    Display.Print_String(DatabaseJson[FolderSelected][i]["name"].as<String>(), 0, y);
+                    Serial.println(DatabaseJson[FolderSelected][i]["name"].as<String>());
+                }
+            }
+
+            vTaskDelay(100);
+
+            if (ButtonSelect.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button to go back");
+                resetAllButtons();
+                IR_Blaster_.sendMessage(DatabaseJson[FolderSelected][Selection]["id"],
+                                        DatabaseJson[FolderSelected][0]["address"],
+                                        DatabaseJson[FolderSelected][Selection]["n_bytes"]);
+                Display.Fill_Screen(White);
+                vTaskDelay(100);
+                Display.Fill_Screen(Black);
+                setText(2, White, Black);
+                Display.Print_String(Title, 0, 0);
+                Changed = true;
+            }
+
+            if (ButtonUp.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button up");
+                resetAllButtons();
+                if (Selection > 1) {
+                    Changed = true;
+                    Selection--;
+                }
+            }
+
+            if (ButtonDown.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button down");
+                resetAllButtons();
+                if (Selection < MaxSize-1) {
+                    Changed = true;
+                    Selection++;
+                }
+            }
+
+            if (ButtonBack.GetState()) {
+                ESP_LOGI(TaskName, "Pressed button to go back");
+                State = ZapperFolder;
+                resetAllButtons();
+                break;
+            }
         }
     }
 
@@ -314,7 +385,7 @@ private:
                     func_ZapperFolder();
                     break;
                 case ZapperBlast:
-                    vTaskDelay(100);
+                    func_ZapperBlast();
                     break;
             }
         }

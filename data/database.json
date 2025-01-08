@@ -5,17 +5,17 @@
       "address": 0
     },
     {
-      "name": "Richard",
+      "name": "Richard    ",
       "id": 69,
       "n_bytes": 1
     },
     {
-      "name": "Boudewijn",
+      "name": "Boudewijn  ",
       "id": 70,
       "n_bytes": 1
     },
     {
-      "name": "Willemijn",
+      "name": "Willemijn  ",
       "id": 71,
       "n_bytes": 1
     }
@@ -26,17 +26,17 @@
       "address": 1
     },
     {
-      "name": "Bernard",
+      "name": "Bernard    ",
       "id": 88,
       "n_bytes": 1
     },
     {
-      "name": "Dirk",
+      "name": "Dirk       ",
       "id": 89,
       "n_bytes": 1
     },
     {
-      "name": "Raoul",
+      "name": "Raoul      ",
       "id": 90,
       "n_bytes": 1
     }
@@ -47,17 +47,17 @@
       "address": 2
     },
     {
-      "name": "Liesje",
+      "name": "Liesje     ",
       "id": 100,
       "n_bytes": 1
     },
     {
-      "name": "Johan",
+      "name": "Johan      ",
       "id": 101,
       "n_bytes": 1
     },
     {
-      "name": "Wilco",
+      "name": "Wilco      ",
       "id": 102,
       "n_bytes": 1
     }

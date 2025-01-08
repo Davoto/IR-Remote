@@ -36,7 +36,10 @@ private:
 
     void ButtonTask(){
         for(;;){
-            if(!digitalRead(Button)) ButtonPressed = true;
+            if(!digitalRead(Button)) {
+                ButtonPressed = true;
+                vTaskDelay(200);
+            }
             vTaskDelay(100);
         }
     }
