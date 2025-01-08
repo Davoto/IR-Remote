@@ -2,7 +2,6 @@
 #define IR_BIG_REMOTE_H
 
 #include "IR_Button_Handler.h"
-#include <LCDWIKI_GUI.h>
 #include "SSD1283A.h"
 #include "IR_Blaster.h"
 #include "SPIFFS.h"
@@ -10,35 +9,68 @@
 
 class BigRemote {
 public:
+    /**
+     * Constructor for Big Remote, loads button handler classes, display class and IR-Blaster class.
+     * @param ButtonSelect pin to be used as the selection button.
+     * @param ButtonUp pin to be used as the up button.
+     * @param ButtonDown pin to be used as the down button.
+     * @param ButtonBack pin to be used as the back button.
+     * @param Display class to be used to display menu's.
+     * @param IR_Blaster_ class to be used to send message's trough IR.
+     */
     BigRemote(gpio_num_t &ButtonSelect, gpio_num_t &ButtonUp, gpio_num_t &ButtonDown,
               gpio_num_t &ButtonBack, SSD1283A_GUI &Display, IR_Blaster &IR_Blaster_) :
             ButtonSelect(ButtonSelect), ButtonUp(ButtonUp), ButtonDown(ButtonDown), ButtonBack(ButtonBack),
             Display(Display), IR_Blaster_(IR_Blaster_) {};
 
+    /**
+     * Function to initialize Button Handlers used in this class, set Display rotation and to start
+     * the main task.
+     */
     void begin() {
         ButtonSelect.begin();
         ButtonUp.begin();
         ButtonDown.begin();
         ButtonBack.begin();
+        Display.setRotation(3);
         xTaskCreate(Static_main, TaskName, TaskDepth, this, TaskPriority, &Task);
     };
 
+    /**
+     * Function to Stop the button handler tasks and main task.
+     */
     void stop() {
+        ButtonSelect.stop();
+        ButtonUp.stop();
+        ButtonDown.stop();
+        ButtonBack.stop();
         vTaskDelete(&Task);
     };
 private:
+    /**
+     * Classes used within this class.
+     */
     IR_Button_Handler ButtonSelect, ButtonUp, ButtonDown, ButtonBack;
     SSD1283A_GUI Display;
     IR_Blaster IR_Blaster_;
 
+    /**
+     * Options used by this class's task.
+     */
     TaskHandle_t Task;
     const char *TaskName = "BigRemote";
     const uint16_t TaskDepth = 16384;
     const uint8_t TaskPriority = 3;
 
+    /**
+     * Selection values to remember placement within different states of the main task.
+     */
     uint16_t Selection = 0;
     uint16_t FolderSelected = 0;
 
+    /**
+     * Enum used by setText function to require colours within this enum.
+     */
     enum colours {
         Black = 0x0000,
         White = 0xffff,
@@ -47,19 +79,29 @@ private:
         Red = 0xf800
     };
 
+    /**
+     * States used within the main task.
+     */
     enum state {
         StartScreen,
-        Options,
+        MainMenu,
         DatabaseUpdater,
         ZapperFolder,
         ZapperBlast
     };
     state State = StartScreen;
 
+    /**
+     * Function to check if any button is pressed.
+     * @return true when any button is pressed otherwise false.
+     */
     bool anyButtonPressed() {
         return ButtonSelect.GetState() || ButtonUp.GetState() || ButtonDown.GetState() || ButtonBack.GetState();
     }
 
+    /**
+     * Function to reset all button's states.
+     */
     void resetAllButtons() {
         ButtonSelect.ResetButton();
         ButtonUp.ResetButton();
@@ -67,12 +109,22 @@ private:
         ButtonBack.ResetButton();
     }
 
+    /**
+     * Function to set display text size and colour.
+     * @param Size
+     * @param ColourText
+     * @param ColourBack
+     */
     void setText(const uint8_t &Size, const colours &ColourText, const colours &ColourBack) {
         Display.Set_Text_Size(Size);
         Display.Set_Text_colour(ColourText);
         Display.Set_Text_Back_colour(ColourBack);
     }
 
+    /**
+     * Function to render startscreen, proceeds to the wait in own loop for anyButtonPressed() to proceed to state
+     * Menu.
+     */
     void func_StartScreen() {
         unsigned char Title[] = "Welcome to\n  ~ Big ~\n IR-Remote!";
         unsigned char Subtitle[] = "Press any button";
@@ -90,14 +142,20 @@ private:
                 resetAllButtons();
                 break;
             }
-            vTaskDelay(1);
+            vTaskDelay(100);
         }
         ESP_LOGI(TaskName, "Pressed Button on StartScreen");
         Selection = 0;
-        State = Options;
+        State = MainMenu;
     }
 
-    void func_Options() {
+    /**
+     * Function renders the main menu with two options, Zapper and Update. Zapper goes to the ZapperFolder State and
+     * Update goes to the DatabaseUpdate state. You can select these options by using the up and down buttons in
+     * combination with the select button to proceed to these states, the back button is used to return to the
+     * StartScreen state.
+     */
+    void func_MainMenu() {
         unsigned char OptionChoose[13] = "   Choose:  ";
         unsigned char OptionZapper[13] = "   Zapper   ";
         unsigned char OptionUpdate[13] = "   Update   ";
@@ -108,78 +166,58 @@ private:
         Display.Print_String(OptionChoose, 0, 0);
 
         Selection = 0;
-        for (;;) {
-            switch (Selection) {
-                case 0:
-                    setText(2, Red, Grey);
-                    Display.Print_String(OptionZapper, 0, 40);
+        for(;;){
+            if(Selection){
+                setText(2, White, LightGrey);
+                Display.Print_String(OptionZapper, 0, 40);
 
-                    setText(2, White, LightGrey);
-                    Display.Print_String(OptionUpdate, 0, 80);
+                setText(2, Red, Grey);
+                Display.Print_String(OptionUpdate, 0, 80);
+            }else{
+                setText(2, Red, Grey);
+                Display.Print_String(OptionZapper, 0, 40);
 
-                    for (;;) {
-                        vTaskDelay(100);
-
-                        if (ButtonSelect.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button for Zapper");
-                            State = ZapperFolder;
-                            resetAllButtons();
-                            break;
-                        }
-                        if (ButtonBack.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button to go back");
-                            State = StartScreen;
-                            resetAllButtons();
-                            break;
-                        }
-                        if (ButtonDown.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button to change selection");
-                            Selection = 1;
-                            resetAllButtons();
-                            break;
-                        }
-                    }
-                    break;
-                case 1:
-                    setText(2, White, LightGrey);
-                    Display.Print_String(OptionZapper, 0, 40);
-
-                    setText(2, Red, Grey);
-                    Display.Print_String(OptionUpdate, 0, 80);
-
-                    for (;;) {
-                        vTaskDelay(100);
-
-                        if (ButtonSelect.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button for database updater");
-                            State = DatabaseUpdater;
-                            resetAllButtons();
-                            Selection = 0;
-                            break;
-                        }
-                        if (ButtonBack.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button to go back");
-                            State = StartScreen;
-                            resetAllButtons();
-                            break;
-                        }
-                        if (ButtonUp.GetState()) {
-                            ESP_LOGI(TaskName, "Pressed button to change selection");
-                            Selection = 0;
-                            resetAllButtons();
-                            break;
-                        }
-                    }
-                    break;
-                default:
-                    Selection = 0;
-                    break;
+                setText(2, White, LightGrey);
+                Display.Print_String(OptionUpdate, 0, 80);
             }
-            if (State != Options) break;
-        }
-        vTaskDelay(1);
-    }
 
+            for (;;) {
+                vTaskDelay(100);
+
+                if (ButtonSelect.GetState()) {
+                    ESP_LOGI(TaskName, "Pressed button for Zapper");
+                    if(Selection){
+                        State = DatabaseUpdater;
+                    }else State = ZapperFolder;
+                    resetAllButtons();
+                    break;
+                }
+
+                if (ButtonBack.GetState()) {
+                    ESP_LOGI(TaskName, "Pressed button to go back");
+                    State = StartScreen;
+                    resetAllButtons();
+                    break;
+                }
+
+                if (ButtonUp.GetState()) {
+                    ESP_LOGI(TaskName, "Pressed button to change selection");
+                    Selection = 0;
+                    resetAllButtons();
+                    break;
+                }
+
+                if (ButtonDown.GetState()) {
+                    ESP_LOGI(TaskName, "Pressed button to change selection");
+                    Selection = 1;
+                    resetAllButtons();
+                    break;
+                }
+            }
+            if(State != MainMenu) break;
+        }
+    }
+    
     void func_DatabaseUpdater() {
         JsonDocument DatabaseJson;
 
@@ -197,14 +235,14 @@ private:
             if (!database) ESP_LOGE(TaskName, "File failed to open.");
 
             uint32_t databaseSize = database.size();
-            uint32_t databasePercentage = databaseSize / 1200;
+            // uint32_t databasePercentage = databaseSize / 1200; uncommented because use is not working currently.
 
             ESP_LOGI(TaskName, "Current filesize in bytes (Max possible 120000~): %d", databaseSize);
             database.close();
 
             setText(2, White, LightGrey);
             Display.Print_String(LowerText, 0, 80);
-            // Display.Print_String(String(databasePercentage), databasePercentage < 10 ? 72 : 60, 112);
+            // Display.Print_String(String(databasePercentage), databasePercentage < 10 ? 72 : 60, 112); Not working for unknown reason.
 
 
             deserializeJson(DatabaseJson, Serial);
@@ -221,7 +259,7 @@ private:
 
             if (ButtonBack.GetState()) {
                 ESP_LOGI(TaskName, "Pressed button to go back");
-                State = Options;
+                State = MainMenu;
                 resetAllButtons();
                 break;
             }
@@ -231,7 +269,7 @@ private:
     void func_ZapperFolder() {
         unsigned char Title[] = "  Folders  ";
 
-        Selection = 0;
+        Selection = FolderSelected;
         JsonDocument DatabaseJson;
         File database = SPIFFS.open("/database.json", FILE_READ);
         deserializeJson(DatabaseJson, database);
@@ -247,7 +285,7 @@ private:
         for (;;) {
             if (Changed) {
                 Changed = false;
-                for (int i = 0; i < MaxSize; i++) {
+                for (uint16_t i = 0; i < MaxSize; i++) {
                     if (i == Selection) {
                         setText(2, Red, Grey);
                     } else setText(2, White, LightGrey);
@@ -286,7 +324,7 @@ private:
 
             if (ButtonBack.GetState()) {
                 ESP_LOGI(TaskName, "Pressed button to go back");
-                State = Options;
+                State = MainMenu;
                 resetAllButtons();
                 break;
             }
@@ -367,16 +405,19 @@ private:
         }
     }
 
+    /**
+     * Main task initializes SPIFFS path, switches between 5 states see the functions per state for further explanation
+     * of main task.
+     */
     void main() {
         if (!SPIFFS.begin(true, "/minidb")) ESP_LOGE(TaskName, "Spiffs failed to mount.");
-        Display.setRotation(3);
         for (;;) {
             switch (State) {
                 case StartScreen:
                     func_StartScreen();
                     break;
-                case Options:
-                    func_Options();
+                case MainMenu:
+                    func_MainMenu();
                     break;
                 case DatabaseUpdater:
                     func_DatabaseUpdater();

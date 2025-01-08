@@ -4,8 +4,8 @@
 #include "IR_Simple_Remote.h"
 #include "cJSON.h"
 
-gpio_num_t SendButton = GPIO_NUM_32;
-gpio_num_t UpButton = GPIO_NUM_33;
+gpio_num_t SendButton = GPIO_NUM_14;
+gpio_num_t UpButton = GPIO_NUM_26;
 gpio_num_t DownButton = GPIO_NUM_25;
 uint8_t Address = 0x00;
 cJSON* JsonList = cJSON_Parse(R"([{"name": "Richard", "id": 69, "n_bytes": 1},

@@ -1,13 +1,12 @@
 #include "Arduino.h"
 #include "IR_Blaster.h"
-#include <LCDWIKI_GUI.h>
 #include "SSD1283A.h"
 #include "IR_Big_Remote.h"
 
 gpio_num_t IR_Pin = GPIO_NUM_27;
 IR_Blaster IR_Blaster_(IR_Pin);
 
-SSD1283A_GUI Display(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*LED=*/ 4); //hardware spi,cs,cd,reset,led
+SSD1283A_GUI Display(/*CS=5*/ SS, /*DC=*/ 17, /*RST=*/ 16, /*LED=*/ 4); // SDA=23, Clock=18
 
 gpio_num_t SelectButton = GPIO_NUM_25;
 gpio_num_t UpButton = GPIO_NUM_26;
