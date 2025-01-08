@@ -3,7 +3,6 @@
 #include <LCDWIKI_GUI.h>
 #include "SSD1283A.h"
 #include "IR_Big_Remote.h"
-#include "IR_Button_Handler.h"
 
 gpio_num_t IR_Pin = GPIO_NUM_27;
 IR_Blaster IR_Blaster_(IR_Pin);
