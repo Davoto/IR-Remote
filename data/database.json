@@ -2,7 +2,7 @@
   [
     {
       "subject": "Heidelbergl",
-      "address": 0
+      "address": 1
     },
     {
       "name": "Richard    ",
@@ -18,12 +18,17 @@
       "name": "Willemijn  ",
       "id": 71,
       "n_bytes": 1
+    },
+    {
+      "name": "Rik        ",
+      "id": 72,
+      "n_bytes": 1
     }
   ],
   [
     {
       "subject": "Padualaan  ",
-      "address": 1
+      "address": 2
     },
     {
       "name": "Bernard    ",
@@ -44,7 +49,7 @@
   [
     {
       "subject": "Cambridgela",
-      "address": 2
+      "address": 3
     },
     {
       "name": "Liesje     ",
@@ -59,6 +64,16 @@
     {
       "name": "Wilco      ",
       "id": 102,
+      "n_bytes": 1
+    },
+    {
+      "name": "Elizabeth  ",
+      "id": 103,
+      "n_bytes": 1
+    },
+    {
+      "name": "Remco      ",
+      "id": 104,
       "n_bytes": 1
     }
   ]

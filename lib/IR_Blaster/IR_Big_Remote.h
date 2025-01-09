@@ -217,7 +217,15 @@ private:
             if(State != MainMenu) break;
         }
     }
-    
+
+    /**
+     * This function renders the Database Updater, opens the databasefile, prints it's size in debug console
+     * <s>and on screen</s>(currently not because weird conversion error while running). If a Json is sent through
+     * serial the internal database will be updated with that and the screen will display "Updated!". See the file
+     * "data/database.json" for format of json.
+     *
+     * To return to main menu press the back button.
+     */
     void func_DatabaseUpdater() {
         JsonDocument DatabaseJson;
 
@@ -244,7 +252,7 @@ private:
             Display.Print_String(LowerText, 0, 80);
             // Display.Print_String(String(databasePercentage), databasePercentage < 10 ? 72 : 60, 112); Not working for unknown reason.
 
-
+            ESP_LOGI(TaskName, "Please input in the console the Json to replace the database.");
             deserializeJson(DatabaseJson, Serial);
             if (!DatabaseJson.isNull()) {
                 database = SPIFFS.open("/database.json", FILE_WRITE);
@@ -266,6 +274,11 @@ private:
         }
     }
 
+    /**
+     * Function to render Folders in the database, by reading them from the database into a jsonDocument. ButtonUp and
+     * -Down control selection. You can select a folder by clicking the SelectButton, this will change state to
+     * ZapperBlast. To return to the MainMenu you press the BackButton.
+     */
     void func_ZapperFolder() {
         unsigned char Title[] = "  Folders  ";
 
@@ -332,8 +345,14 @@ private:
         }
     }
 
+    /**
+     * Function renders in ZapperFolder selected folder by reading the database file into a jsonDocument. The ButtonUp
+     * and -Down control Selection of IR signals in the folder. The ButtonSelect sends the IR-Signal that's selected,
+     * als flashes screen white to let user know something happens. The ButtonBack returns to State ZapperFolder, and
+     * sets your selection back to the folder selected here.
+     */
     void func_ZapperBlast(){
-        unsigned char Title[] = "    Zaps   ";
+        unsigned char Title[] = "   Zaps:   ";
 
         FolderSelected = Selection;
         Selection = 1;
@@ -432,6 +451,9 @@ private:
         }
     }
 
+    /**
+     * Function to run a non-static function in a Task, through pointing 🫵.
+     */
     static void Static_main(void *arg) {
         BigRemote *runner = (BigRemote *) arg;
         runner->main();
