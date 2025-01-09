@@ -384,7 +384,7 @@ private:
             vTaskDelay(100);
 
             if (ButtonSelect.GetState()) {
-                ESP_LOGI(TaskName, "Pressed button to go back");
+                ESP_LOGI(TaskName, "Pressed button to send Message");
                 resetAllButtons();
                 IR_Blaster_.sendMessage(DatabaseJson[FolderSelected][Selection]["id"],
                                         DatabaseJson[FolderSelected][0]["address"],
